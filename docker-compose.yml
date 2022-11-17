@@ -1,0 +1,45 @@
+version: '3.7'
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mongo
+  
+  mongo:
+    image: mongo
+    restart: always
+    container_name: mongo
+    env_file:
+      - .env
+    environment:
+      - "MONGO_INITDB_DATABASE=${MONGO_DB}"
+      - "MONGO_INITDB_ROOT_USERdoNAME=${MONGO_USER}"
+      - "MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASS}"
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./data/mongo:/data/db
+  
+  mongo-express:
+    image: mongo-express
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "8081:8081"
+    environment:
+      - "ME_CONFIG_MONGODB_ENABLE_ADMIN=true"
+      - "ME_CONFIG_MONGODB_ADMINUSERNAME=${MONGO_USER}"
+      - "ME_CONFIG_MONGODB_ADMINPASSWORD=${MONGO_PASS}"
+      - "ME_CONFIG_MONGODB_SERVER:mongo"
+      - "ME_CONFIG_MONGODB_URL=mongodb://root:secret@mongo:27017/"
+    depends_on:
+      - mongo
